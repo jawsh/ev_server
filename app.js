@@ -3,9 +3,11 @@ const app = express();
 const server = require("http").Server(app);
 const cors = require("cors");
 
-const { getOverview, getArticle, processData, checkCache } = require("./process-overview");
+const { getOverview, getArticle, processData, checkCache } = require("./processor");
 
 const port = 3001;
+
+app.use(cors());
 
 processData().then(() => {
     server.listen(port, (err) => {
@@ -15,8 +17,6 @@ processData().then(() => {
         console.log(`Server listening on port ${port}`);
     });
 });
-
-app.use(cors());
 
 app.get("/overview/", checkCache, getOverview);
 
