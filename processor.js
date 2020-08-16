@@ -15,6 +15,7 @@ async function processData() {
         const parsed = JSON.parse(d);
         cache.set(i, parsed);
     });
+    const documentCount = await countDocuments(data);
     const wordCount = await countWords(data);
     const yearData = await getSourcesFromYear(data);
     const countryData = await getCountries(data);
@@ -28,6 +29,7 @@ async function processData() {
         wordCount,
         elonCount,
         sources,
+        documentCount,
     };
     cache.set("overview", overview);
     cache.set("words", wordCount);
@@ -54,6 +56,7 @@ const getArticle = (req, res) => {
 
 const getOverview = async (req, res) => {
     try {
+        const documentCount = await getDocuments(data);
         const wordCount = await countWords(data);
         const yearData = await getSourcesFromYear(data);
         const countryData = await getCountries(data);
@@ -67,6 +70,7 @@ const getOverview = async (req, res) => {
             wordCount,
             elonCount,
             sources,
+            documentCount,
         };
         res.send(overview);
         return;
@@ -110,7 +114,7 @@ async function getSourcesFromYear(data) {
 
 const getCountryYears = async (data) => {
     let countryYear = {};
-    data.forEach((d, i) => {
+    data.forEach((d) => {
         const parsed = JSON.parse(d);
         const year = parsed.m_szYear;
         if (parsed.m_szGeo1 === "") {
@@ -130,7 +134,7 @@ const getCountryYears = async (data) => {
 
 const countWords = async (data) => {
     let wordCount = 0;
-    data.forEach((d, i) => {
+    data.forEach((d) => {
         const parsed = JSON.parse(d);
         const words = parsed.m_iDocBodyWordCnt;
         wordCount += words;
@@ -140,7 +144,7 @@ const countWords = async (data) => {
 
 const getElon = async (data) => {
     let elonCount = 0;
-    data.forEach((d, i) => {
+    data.forEach((d) => {
         const parsed = JSON.parse(d);
         const elon = (parsed.m_szDocBody.match(/elon/g) || []).length;
         elonCount += elon;
@@ -159,6 +163,14 @@ const getSources = async (data) => {
         }
     });
     return sources;
+};
+
+const countDocuments = async (data) => {
+    let documents = 0;
+    data.forEach(() => {
+        documents = documents + 1;
+    });
+    return documents;
 };
 
 module.exports = {
