@@ -1,6 +1,6 @@
 const NodeCache = require("node-cache");
 
-const TTL = 1200;
+const TTL = 3600;
 
 const cache = new NodeCache({ stdTTL: TTL });
 const { readDir, readFiles } = require("./dataprep");
