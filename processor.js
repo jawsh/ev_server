@@ -17,12 +17,12 @@ async function processData() {
         wordcount += parsed.m_iDocBodyWordCnt;
         cache.set(i, parsed);
     });
-    const years = await getSourcesFromYear(data);
-    const countries = await getCountries(data);
+    const yearData = await getSourcesFromYear(data);
+    const countryData = await getCountries(data);
     const countryYear = await getCountryYears(data);
     const overview = {
-        years,
-        countries,
+        yearData,
+        countryData,
     };
     cache.set("overview", overview);
     cache.set("words", wordcount);
