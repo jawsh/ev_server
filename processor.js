@@ -20,12 +20,14 @@ async function processData() {
     const countryData = await getCountries(data);
     const countryYears = await getCountryYears(data);
     const elonCount = await getElon(data);
+    const sources = await getSources(data);
     const overview = {
         yearData,
         countryData,
         countryYears,
         wordCount,
         elonCount,
+        sources,
     };
     cache.set("overview", overview);
     cache.set("words", wordCount);
@@ -57,12 +59,14 @@ const getOverview = async (req, res) => {
         const countryData = await getCountries(data);
         const countryYears = await getCountryYears(data);
         const elonCount = await getElon(data);
+        const sources = await getSources(data);
         const overview = {
             yearData,
             countryData,
             countryYears,
             wordCount,
             elonCount,
+            sources,
         };
         res.send(overview);
         return;
@@ -142,6 +146,19 @@ const getElon = async (data) => {
         elonCount += elon;
     });
     return elonCount;
+};
+
+const getSources = async (data) => {
+    let sources = {};
+    data.forEach((d) => {
+        const parsed = JSON.parse(d);
+        if (!sources[`${parsed.m_szSourceType}`]) {
+            sources[`${parsed.m_szSourceType}`] = 1;
+        } else {
+            sources[`${parsed.m_szSourceType}`] = sources[`${parsed.m_szSourceType}`] + 1;
+        }
+    });
+    return sources;
 };
 
 module.exports = {
