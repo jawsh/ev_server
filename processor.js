@@ -66,22 +66,21 @@ const manipulateData = async (data) => {
             elonCount += elon;
 
             documentCount++;
-
-            cache.set("overview", overview);
-
-            overview = {
-                yearData,
-                countryData,
-                countryYears,
-                wordCount,
-                elonCount,
-                sources,
-                documentCount,
-            };
         });
     } catch (err) {
         throw err;
     }
+    overview = {
+        yearData,
+        countryData,
+        countryYears,
+        wordCount,
+        elonCount,
+        sources,
+        documentCount,
+    };
+    cache.set("overview", overview);
+
     return overview;
 };
 
