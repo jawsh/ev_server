@@ -18,6 +18,8 @@ processData().then(() => {
     });
 });
 
+setInterval(processData, 1200000);
+
 app.get("/overview/", checkCache, getOverview);
 
 app.get("/article/", checkCache, getArticle);

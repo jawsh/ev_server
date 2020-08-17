@@ -104,6 +104,7 @@ const getOverview = async (req, res) => {
     try {
         console.info("Processing Overview Data");
         const overview = await manipulateData(data);
+        cache.set("overview", overview);
         return res.send(overview);
     } catch (err) {
         console.error(err);
