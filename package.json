@@ -15,5 +15,8 @@
         "graceful-fs": "^4.2.4",
         "node-cache": "^5.1.2",
         "promisify": "0.0.3"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.4"
     }
 }
