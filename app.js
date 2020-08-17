@@ -14,7 +14,7 @@ processData().then(() => {
         if (err) {
             throw err;
         }
-        console.log(`Server listening on port ${port}`);
+        console.info(`Server listening on port ${port}`);
     });
 });
 

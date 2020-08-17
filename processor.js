@@ -7,79 +7,83 @@ const { readDir, readFiles } = require("./dataprep");
 
 let data;
 
-async function processData() {
+const processData = async () => {
     console.info("Starting Data Processing...");
     const filenames = await readDir();
     data = await readFiles(filenames);
-    // let countryData = {};
-    // let yearData = {};
-    // let sources = {};
-    // let countryYears = {};
-    // let wordCount = 0;
-    // let elonCount = 0;
-    // let documentCount = 0;
-    data.forEach((d, i) => {
-        const parsed = JSON.parse(d);
-        cache.set(i, parsed);
+    await manipulateData(data);
+    console.info(cache.getStats(), "CACHE SET");
+    console.info("Data Processing Complete");
+};
 
-        // if (parsed.m_szGeo1 === "") {
-        //     parsed.m_szGeo1 = "Unknown Geo";
-        // }
-        // if (!countryData[`${parsed.m_szGeo1}`]) {
-        //     countryData[`${parsed.m_szGeo1}`] = 1;
-        // } else {
-        //     countryData[`${parsed.m_szGeo1}`] = countryData[`${parsed.m_szGeo1}`] + 1;
-        // }
+const manipulateData = async (data) => {
+    let overview = {};
+    let countryData = {};
+    let yearData = {};
+    let sources = {};
+    let countryYears = {};
+    let wordCount = 0;
+    let elonCount = 0;
+    let documentCount = 0;
+    try {
+        data.forEach((d, i) => {
+            const parsed = JSON.parse(d);
+            cache.set(i, parsed);
 
-        // if (!yearData[`${parsed.m_szYear}`]) {
-        //     yearData[`${parsed.m_szYear}`] = 1;
-        // } else {
-        //     yearData[`${parsed.m_szYear}`] = yearData[`${parsed.m_szYear}`] + 1;
-        // }
+            if (parsed.m_szGeo1 === "") {
+                parsed.m_szGeo1 = "Unknown Geo";
+            }
+            if (!countryData[`${parsed.m_szGeo1}`]) {
+                countryData[`${parsed.m_szGeo1}`] = 1;
+            } else {
+                countryData[`${parsed.m_szGeo1}`] = countryData[`${parsed.m_szGeo1}`] + 1;
+            }
 
-        // if (!countryYears[`${parsed.m_szGeo1}`]) {
-        //     countryYears[`${parsed.m_szGeo1}`] = [`${parsed.m_szYear}`];
-        // } else {
-        //     if (!countryYears[`${parsed.m_szGeo1}`].includes(`${parsed.m_szYear}`)) {
-        //         countryYears[`${parsed.m_szGeo1}`].push(`${parsed.m_szYear}`);
-        //     }
-        // }
+            if (!yearData[`${parsed.m_szYear}`]) {
+                yearData[`${parsed.m_szYear}`] = 1;
+            } else {
+                yearData[`${parsed.m_szYear}`] = yearData[`${parsed.m_szYear}`] + 1;
+            }
 
-        // if (!sources[`${parsed.m_szSourceType}`]) {
-        //     sources[`${parsed.m_szSourceType}`] = 1;
-        // } else {
-        //     sources[`${parsed.m_szSourceType}`] = sources[`${parsed.m_szSourceType}`] + 1;
-        // }
+            if (!countryYears[`${parsed.m_szGeo1}`]) {
+                countryYears[`${parsed.m_szGeo1}`] = [`${parsed.m_szYear}`];
+            } else {
+                if (!countryYears[`${parsed.m_szGeo1}`].includes(`${parsed.m_szYear}`)) {
+                    countryYears[`${parsed.m_szGeo1}`].push(`${parsed.m_szYear}`);
+                }
+            }
 
-        // const words = parsed.m_iDocBodyWordCnt;
-        // wordCount += words;
+            if (!sources[`${parsed.m_szSourceType}`]) {
+                sources[`${parsed.m_szSourceType}`] = 1;
+            } else {
+                sources[`${parsed.m_szSourceType}`] = sources[`${parsed.m_szSourceType}`] + 1;
+            }
 
-        // const elon = (parsed.m_szDocBody.match(/elon/g) || []).length;
-        // elonCount += elon;
+            const words = parsed.m_iDocBodyWordCnt;
+            wordCount += words;
 
-        // documentCount++;
-    });
-    const documentCount = await countDocuments(data);
-    const wordCount = await countWords(data);
-    const yearData = await getSourcesFromYear(data);
-    const countryData = await getCountries(data);
-    const countryYears = await getCountryYears(data);
-    const elonCount = await getElon(data);
-    const sources = await getSources(data);
-    const overview = {
-        yearData,
-        countryData,
-        countryYears,
-        wordCount,
-        elonCount,
-        sources,
-        documentCount,
-    };
-    cache.set("overview", overview);
-    cache.set("words", wordCount);
-    console.info(cache.getStats());
-    console.info("Data Processing Complete - Cache SET");
-}
+            const elon = (parsed.m_szDocBody.match(/elon/g) || []).length;
+            elonCount += elon;
+
+            documentCount++;
+
+            cache.set("overview", overview);
+
+            overview = {
+                yearData,
+                countryData,
+                countryYears,
+                wordCount,
+                elonCount,
+                sources,
+                documentCount,
+            };
+        });
+    } catch (err) {
+        throw err;
+    }
+    return overview;
+};
 
 const checkCache = (req, res, next) => {
     const { query } = req.query;
@@ -100,22 +104,8 @@ const getArticle = (req, res) => {
 
 const getOverview = async (req, res) => {
     try {
-        const documentCount = await countDocuments(data);
-        const wordCount = await countWords(data);
-        const yearData = await getSourcesFromYear(data);
-        const countryData = await getCountries(data);
-        const countryYears = await getCountryYears(data);
-        const elonCount = await getElon(data);
-        const sources = await getSources(data);
-        const overview = {
-            yearData,
-            countryData,
-            countryYears,
-            wordCount,
-            elonCount,
-            sources,
-            documentCount,
-        };
+        console.info("Processing Overview Data");
+        const overview = await manipulateData(data);
         res.send(overview);
         return;
     } catch (err) {
@@ -125,103 +115,9 @@ const getOverview = async (req, res) => {
     }
 };
 
-async function getCountries(data) {
-    let countries = {};
-    data.forEach((d) => {
-        const parsed = JSON.parse(d);
-        if (parsed.m_szGeo1 === "") {
-            parsed.m_szGeo1 = "Unknown Geo";
-        }
-        if (!countries[`${parsed.m_szGeo1}`]) {
-            countries[`${parsed.m_szGeo1}`] = 1;
-        } else {
-            countries[`${parsed.m_szGeo1}`] = countries[`${parsed.m_szGeo1}`] + 1;
-        }
-    });
-    cache.set("countries", countries);
-    return countries;
-}
-
-async function getSourcesFromYear(data) {
-    let years = {};
-    data.forEach((d) => {
-        const parsed = JSON.parse(d);
-        if (!years[`${parsed.m_szYear}`]) {
-            years[`${parsed.m_szYear}`] = 1;
-        } else {
-            years[`${parsed.m_szYear}`] = years[`${parsed.m_szYear}`] + 1;
-        }
-    });
-    cache.set("years", years);
-    return years;
-}
-
-const getCountryYears = async (data) => {
-    let countryYear = {};
-    data.forEach((d) => {
-        const parsed = JSON.parse(d);
-        const year = parsed.m_szYear;
-        if (parsed.m_szGeo1 === "") {
-            parsed.m_szGeo1 = "Unknown Geo";
-        }
-
-        if (!countryYear[`${parsed.m_szGeo1}`]) {
-            countryYear[`${parsed.m_szGeo1}`] = [`${parsed.m_szYear}`];
-        } else {
-            if (!countryYear[`${parsed.m_szGeo1}`].includes(`${parsed.m_szYear}`)) {
-                countryYear[`${parsed.m_szGeo1}`].push(`${parsed.m_szYear}`);
-            }
-        }
-    });
-    return countryYear;
-};
-
-const countWords = async (data) => {
-    let wordCount = 0;
-    data.forEach((d) => {
-        const parsed = JSON.parse(d);
-        const words = parsed.m_iDocBodyWordCnt;
-        wordCount += words;
-    });
-    return wordCount;
-};
-
-const getElon = async (data) => {
-    let elonCount = 0;
-    data.forEach((d) => {
-        const parsed = JSON.parse(d);
-        const elon = (parsed.m_szDocBody.match(/elon/g) || []).length;
-        elonCount += elon;
-    });
-    return elonCount;
-};
-
-const getSources = async (data) => {
-    let sources = {};
-    data.forEach((d) => {
-        const parsed = JSON.parse(d);
-        if (!sources[`${parsed.m_szSourceType}`]) {
-            sources[`${parsed.m_szSourceType}`] = 1;
-        } else {
-            sources[`${parsed.m_szSourceType}`] = sources[`${parsed.m_szSourceType}`] + 1;
-        }
-    });
-    return sources;
-};
-
-const countDocuments = async (data) => {
-    let documents = 0;
-    data.forEach(() => {
-        documents = documents + 1;
-    });
-    return documents;
-};
-
 module.exports = {
     getArticle,
     checkCache,
     processData,
     getOverview,
-    getCountries,
-    getSourcesFromYear,
 };
