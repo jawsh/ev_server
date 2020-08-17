@@ -91,26 +91,23 @@ const checkCache = (req, res, next) => {
         next();
     } else {
         console.info(`${query} found in cache!`);
-        res.send(data);
-        return;
+        return res.send(data);
     }
 };
 
 const getArticle = (req, res) => {
     const { query } = req.query;
-    res.send(data[query]);
+    return res.send(data[query]);
 };
 
 const getOverview = async (req, res) => {
     try {
         console.info("Processing Overview Data");
         const overview = await manipulateData(data);
-        res.send(overview);
-        return;
+        return res.send(overview);
     } catch (err) {
         console.error(err);
-        res.status(500);
-        return;
+        return res.status(500);
     }
 };
 
